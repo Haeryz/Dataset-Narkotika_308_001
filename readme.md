@@ -1,123 +1,107 @@
-# Legal Case Retrieval for Tindak Pidana Korupsi
+# Dokumentasi Dataset TKI UAS
 
-[![Google Drive Dataset](https://img.shields.io/badge/Google%20Drive-Dataset-blue?logo=google-drive&logoColor=white)](https://drive.google.com/uc?export=download&id=YOUR_DATASET_FILE_ID)
-[![Jupyter Notebook](https://img.shields.io/badge/Jupyter-Notebook-orange?logo=jupyter)](retrieval.ipynb)
-[![Open In Colab](https://img.shields.io/badge/Colab-Notebook-yellow?logo=googlecolab&logoColor=black)](https://colab.research.google.com/github/YOUR_USERNAME/YOUR_REPO/blob/main/retrieval.ipynb)
+## Deskripsi
 
-> Replace the `YOUR_DATASET_FILE_ID` and repository placeholders with your shared Google Drive and GitHub/Colab locations before publishing.
+Dataset TKI UAS adalah koleksi data putusan pengadilan terkait kasus Tenaga Kerja Indonesia (TKI). Dataset ini dikumpulkan untuk keperluan penelitian akademik dalam pengembangan sistem retrieval berbasis vektor (vector-based retrieval system) yang dapat mencari putusan pengadilan serupa berdasarkan fakta-fakta kasus.
 
-This project builds a retrieval system for Indonesian corruption (TPK) court decisions. It cleans structured Excel data, assembles rich textual representations per judgment, embeds them with `sentence-transformers/all-mpnet-base-v2`, and stores the vectors in a managed Qdrant cluster for semantic search. A held-out set of cases is used to quantify retrieval quality via Precision, Recall, and NDCG at multiple `k` values.
+Dataset berisi 5 kolom utama yang telah difilter dari data asli untuk fokus pada informasi hukum dan fakta kasus.
 
-## Project Snapshot
+## Sumber Data
 
-- **Dataset:** 49 corruption judgments × 26 attributes (`dataset/TKI UAS.xlsx`), with key fields `nomor`, `nama pengadilan negeri`, `petunjuk bb`, and `putusan` driving retrieval.
-- **Notebook:** `retrieval.ipynb` orchestrates EDA, preprocessing, embedding, vector upload, and evaluation in an executable, step-by-step workflow.
-- **Vector Store:** Remote Qdrant collection (`tki_cases_v1`) populated with normalized 768D embeddings from `all-mpnet-base-v2`.
-- **Evaluation:** 20% of records held out for ranking quality checks; metrics logged directly in the notebook and summarized below.
+Data diperoleh dari sistem informasi pengadilan resmi Republik Indonesia. Data telah diproses untuk menghilangkan informasi sensitif dan difokuskan pada aspek hukum dan fakta kasus.
 
-## Pipeline Overview
+## Struktur Data
 
-- **Data ingestion** – Load the curated Excel file and validate expected columns and missing values.
-- **Cleaning & enrichment** – Parse JSON-like evidence arrays, trim whitespace, and build a consolidated `combined_text` per record.
-- **Embedding generation** – Encode `combined_text` with `sentence-transformers/all-mpnet-base-v2`, returning normalized vectors.
-- **Vector storage** – Upsert embeddings and metadata payloads into a hosted Qdrant collection for low-latency ANN search.
-- **Evaluation & inspection** – Run hold-out queries against the vector index, compute Precision/Recall/NDCG@K, and inspect ranked hits for qualitative validation.
+Dataset tersimpan dalam format Excel (.xlsx) dengan nama file `TKI UAS.xlsx` di folder `dataset/`.
 
-```mermaid
-flowchart LR
-	 A[Excel judgments<br>dataset/TKI UAS.xlsx] --> B[Data validation<br>& cleaning]
-	 B --> C[Combined text assembly]
-	 C --> D[SentenceTransformer
-	 embeddings]
-	 D --> E[Qdrant vector store]
-	 E --> F[ANN retrieval for
-	 held-out cases]
-	 F --> G[Ranking metrics &
-	 qualitative review]
+### Kolom-Kolom dalam Dataset
+
+Dataset menggunakan 5 kolom utama:
+
+| Kolom | Deskripsi | Tipe Data |
+|-------|-----------|-----------|
+| No | Nomor urut record | integer |
+| nomor | Nomor putusan pengadilan | string |
+| nama pengadilan negeri | Nama lembaga peradilan | string |
+| petunjuk bb | Barang bukti dalam format JSON array | string |
+| putusan | Teks amar putusan | string |
+
+## Tipe Data
+
+- **Integer**: Kolom `No`
+- **String**: Kolom `nomor`, `nama pengadilan negeri`, `petunjuk bb`, `putusan`
+
+## Contoh Data
+
+Berikut adalah 5 baris pertama dari dataset:
+
+| No | nomor | nama pengadilan negeri | petunjuk bb | putusan |
+| --- | --- | --- | --- | --- |
+| 1 | Nomor 227/Pid.Sus/2024/PN Jkt.Brt | Pengadilan Negeri Jakarta Barat | ["1 (satu) unit Handphone merk Samsung S22 warna putih.","1 (satu) unit Kartu ATM BCA Nomor Reken... | MENGADILI:<br>1. Menyatakan Terdakwa ANDREAN JUSTIN bin TJIOE KOK KHIONG telah terbukti secara sah d... |
+| 2 | Nomor: 75/Pid.Sus/2016/PN.Jkt.Brt. | Pengadilan Negeri Jakarta Barat | ["1 (satu) paket plastic kecil shabu dengan berat bruto 0,2 gram, setelah dilakukan pemeriksaan l... | MENGADILI<br>1. Menyatakan Terdakwa ARIF BIJAKSONO BIN HEMAT telah terbukti secara sah dan meyakinka... |
+| 3 | Nomor: 728/Pid.Sus/2024/PN.Jkt.Brt. | Pengadilan Negeri Jakarta Barat | ["1 (satu) bungkus plastik klip ukuran sedang berisikan serbuk warna putih dengan berat netto 14,... | MENGADILI:<br>1. Menyatakan Terdakwa OKTAVIANUS WIJAYA Als OKTA Bin JIN KIUN telah terbukti secara s... |
+| 4 | Nomor 770/Pid.Sus/2024/PN Jkt.Brt | Pengadilan Negeri Jakarta Barat | ["2 (dua) bungkus plastik klip ukuran sedang masing-masing berisikan kristal warna putih dengan b... | MENGADILI:<br>1. Menyatakan Terdakwa Rachmat Alias Tepos Bin H. Saaman tersebut diatas, telah terbuk... |
+| 5 | Nomor 889/Pid.Sus/2024/PN Jkt.Brt | Pengadilan Negeri Jakarta Barat | ["1 bungkus plastik klip (kode A) berisikan Metamfetamina dengan berat netto 4,7865 gram (sisa)."... | M E N G A D I L I<br>1. Menyatakan Terdakwa Muhammad Taufik Alias Abang Bin Abdul Malik tersebut dia... |
+
+## Statistik Dataset
+
+- **Jumlah Record**: [Sesuai dengan file Excel]
+- **Jumlah Kolom**: 5
+- **Ukuran File**: [Sesuai dengan file Excel]
+- **Rentang Tanggal**: [Berdasarkan tanggal putusan]
+
+## Penggunaan Dataset
+
+Dataset ini dapat digunakan untuk:
+
+1. **Pengembangan Sistem Retrieval**: Mencari putusan serupa berdasarkan fakta kasus menggunakan teknik embedding dan vector search
+2. **Analisis Hukum**: Menganalisis pola putusan dalam kasus TKI
+3. **Penelitian Akademik**: Studi tentang sistem peradilan terkait TKI
+4. **Machine Learning**: Training model untuk klasifikasi atau retrieval otomatis
+
+### Contoh Penggunaan dalam Kode
+
+```python
+import pandas as pd
+
+# Load dataset
+df = pd.read_excel('dataset/Overview.xlsx')
+
+# Filter kolom utama
+filtered_df = df[['nomor', 'nama pengadilan negeri', 'petunjuk bb', 'putusan']]
+
+# Parsing petunjuk bb
+import json
+def parse_bb(value):
+    if pd.isna(value):
+        return value
+    try:
+        items = json.loads(value)
+        return '\n'.join(f"{i+1}. {item}" for i, item in enumerate(items))
+    except:
+        return str(value)
+
+filtered_df['petunjuk bb'] = filtered_df['petunjuk bb'].apply(parse_bb)
 ```
 
-## Repository Layout
+## Lisensi
 
-- `retrieval.ipynb` – End-to-end workflow (EDA → preprocessing → embeddings → vector upload → evaluation).
-- `dataset/TKI UAS.xlsx` – Source judgments exported from the TPK dataset.
-- `plots/` – (Optional) space for persisted visualisations if you save figures beyond inline notebook output.
-- `retrieval/` – Python virtual environment (auto-generated); keep it out of version control in shared repos.
+Dataset ini untuk keperluan akademik dan penelitian. Penggunaan komersial memerlukan izin dari sumber data asli.
 
-## Environment Setup
+## Kontak
 
-1. **Create / activate a virtual environment** (example mirrors the checked-in `retrieval` env):
+Untuk pertanyaan lebih lanjut tentang dataset ini, hubungi:
+- Nama: [Nama Anda]
+- Email: [Email Anda]
+- Institusi: Universitas [Nama Universitas]
 
-	```powershell
-	py -3.12 -m venv retrieval
-	.\retrieval\Scripts\Activate.ps1
-	```
+## Riwayat Versi
 
-2. **Install dependencies:**
+- **v1.0** (November 2025): Versi awal dokumentasi dataset
 
-	```powershell
-	pip install pandas numpy scikit-learn matplotlib sentence-transformers qdrant-client openpyxl notebook
-	```
+## Catatan
 
-3. **Configure secrets (recommended):**
-
-	```powershell
-	# Example: store your credentials once per session
-	$env:QDRANT_URL = "https://<your-cluster>.gcp.cloud.qdrant.io:6333"
-	$env:QDRANT_API_KEY = "<api-key>"
-	```
-
-	Update `retrieval.ipynb` to read from environment variables instead of the hard-coded key (`os.environ['QDRANT_API_KEY']`). Rotate the existing key to mitigate accidental exposure.
-
-## Running the Notebook
-
-- Launch Jupyter: `jupyter notebook retrieval.ipynb`
-- Execute cells sequentially. Hugging Face will automatically pull `sentence-transformers/all-mpnet-base-v2` when the embedding block runs.
-- Ensure the Qdrant collection name (`tki_cases_v1`) is unique for your account if multiple experiments run in parallel.
-- To reproduce the evaluation, keep the provided `random_state=42` for the train/test split.
-
-## Evaluation Highlights
-
-**Ranking metrics (20% hold-out):**
-
-| K | Precision@K | Recall@K | NDCG@K |
-| --- | --- | --- | --- |
-| 1 | 1.0000 | 1.00 | 1.00 |
-| 3 | 0.3333 | 1.00 | 1.00 |
-| 5 | 0.2000 | 1.00 | 1.00 |
-| 10 | 0.1000 | 1.00 | 1.00 |
-
-Even though recall is perfect across cut-offs (the correct decision is always retrieved within top-`k`), precision drops as `k` grows—typical for concise corpora where few semantically close neighbours exist. Monitoring Precision@3/5 is useful when designing downstream user interfaces.
-
-**Sample ranked results (query document held out from training):**
-
-| Rank | Doc No | Score | Pengadilan | Nomor Putusan | Putusan snippet | Matches query |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | 30 | 1.0000 | Pengadilan Negeri Jakarta Barat | Nomor 981/Pid.Sus/2021/PN Jkt.Brt | MENGADILI: 1. Menyatakan terdakwa I SALEH FAR... | Yes |
-| 2 | 35 | 0.9490 | Pengadilan Negeri Jakarta Barat | Nomor 256/Pid.Sus/2022/PN Jkt.Brt | MENGADILI : 1. Menyatakan terdakwa Hernanda a... |  |
-| 3 | 41 | 0.9074 | Pengadilan Negeri Jakarta Barat | Nomor 1054/Pid.Sus/2022/PN Jkt.Brt | MENGADILI:      Menyatakan Terdakwa GHANA SA... |  |
-| 4 | 45 | 0.8956 | Pengadilan Negeri Jakarta Barat | Nomor 323/Pid.Sus/2023/PN Jkt.Brt | MENGADILI:      Menyatakan Terdakwa I. MUHAM... |  |
-| 5 | 31 | 0.8752 | Pengadilan Negeri Jakarta Barat | Nomor 767/Pid.Sus/2021/PN.Jkt.Brt. | MENGADILI: 1. Menyatakan terdakwa HARUN RASYI... |  |
-
-The relevant case is returned at rank 1 with cosine similarity 1.0, confirming that the embedding space properly clusters decisions with similar fact patterns. Lower-ranked neighbours share venue and charge similarities, offering reviewers additional context.
-
-## Tips for Extension
-
-- **Feature enrichment:** Incorporate additional text fields (`keterangan perkara`, `identitas terdakwa`, etc.) into `combined_text` to supply richer signals.
-- **Re-ranking:** Experiment with hybrid retrieval (`bm25 + dense`) or rerankers (e.g., `cross-encoder/ms-marco-*`) for improved precision when the corpus grows.
-- **Monitoring:** Persist evaluation summaries (CSV/JSON) and plot outputs under `plots/` to track regressions as you iterate.
-- **Automation:** Wrap preprocessing + embedding steps into a Python script or pipeline when moving beyond notebook experimentation.
-
-## Troubleshooting
-
-- **Unicode decoding errors** when opening the Excel file: ensure `openpyxl` is installed and the dataset path does not contain special characters.
-- **SentenceTransformer timeouts**: run `embedding_model.encode` with smaller `batch_size` if resources are limited.
-- **Qdrant write timeouts**: adjust the `batch_size` or use gRPC (`prefer_grpc=True`) for faster bulk uploads.
-
-## Licensing & Data Availability
-
-- The Google Drive link above should point to the publicly shareable dataset export (keep sensitive data anonymised as required by court data policy).
-- Verify you have rights to redistribute the judgments and cite the official source if mandated.
-
----
-
-Questions or improvement ideas? Open an issue or reach out before expanding the scope (e.g., adding summarisation or question answering layers).
+- Beberapa kolom mungkin mengandung nilai kosong (NaN) yang perlu ditangani dalam preprocessing
+- Kolom `petunjuk bb` memerlukan parsing JSON untuk mendapatkan list barang bukti
+- Data telah dianonimkan untuk melindungi privasi individu yang terlibat</content>
+<parameter name="filePath">d:\Side\UTS TKI\readme.md
