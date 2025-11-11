@@ -45,10 +45,9 @@ Berikut adalah 5 baris pertama dari dataset:
 
 ## Statistik Dataset
 
-- **Jumlah Record**: [Sesuai dengan file Excel]
+- **Jumlah Record**: 50
 - **Jumlah Kolom**: 5
-- **Ukuran File**: [Sesuai dengan file Excel]
-- **Rentang Tanggal**: [Berdasarkan tanggal putusan]
+- **Rentang Tanggal**: 2024
 
 ## Penggunaan Dataset
 
@@ -91,9 +90,9 @@ Dataset ini untuk keperluan akademik dan penelitian. Penggunaan komersial memerl
 ## Kontak
 
 Untuk pertanyaan lebih lanjut tentang dataset ini, hubungi:
-- Nama: [Nama Anda]
-- Email: [Email Anda]
-- Institusi: Universitas [Nama Universitas]
+- Nama: Muhammad Hariz Faizul Anwar
+- Email: muh4mm4dh4r1z@gmail.com
+- Institusi: Universitas Universitas Muhammadiyah Malang
 
 ## Riwayat Versi
 
